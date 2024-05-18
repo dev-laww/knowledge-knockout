@@ -1,8 +1,8 @@
 #ifndef DATABASE_H
 #define DATABASE_H
-#define LEADERBOARDS_FILE "data/leaderboards.txt"
-#define USERS_FILE "data/users.txt"
-#define TRIVIA_FILE "data/trivia.txt"
+#define LEADERBOARDS_FILE "data/leaderboards.csv"
+#define USERS_FILE "data/users.csv"
+#define TRIVIA_FILE "data/trivia.csv"
 
 #include <fstream>
 #include <vector>
