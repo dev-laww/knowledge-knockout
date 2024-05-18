@@ -11,8 +11,11 @@ std::vector<model::User> database::users()
     std::getline(ifs, line); // Skip header
     while (std::getline(ifs, line))
     {
+        // Parse the line
         std::istringstream iss(line);
         std::string username, password, scoreStr;
+
+        // Split the line by comma
         std::getline(iss, username, ',');
         std::getline(iss, password, ',');
         std::getline(iss, scoreStr, ',');
