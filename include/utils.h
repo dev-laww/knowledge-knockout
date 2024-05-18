@@ -40,6 +40,4 @@ namespace utils
     void clear_screen();
 };
 
-#include "../src/utils.cpp"
-
 #endif
