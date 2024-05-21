@@ -74,4 +74,6 @@ namespace database
     void save_trivias(const std::vector<model::Trivia> &trivias);
 };
 
+#include "../src/data.cpp"
+
 #endif // DATABASE_H
