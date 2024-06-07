@@ -5,6 +5,16 @@ void game::load()
     game::users = database::users();
     game::trivias = database::trivias();
     game::leaderboards = database::leaderboards();
+
+    game::categories.clear();
+
+    for (const auto &trivia : game::trivias)
+    {
+        if (std::find(game::categories.begin(), game::categories.end(), trivia.category) != game::categories.end())
+            continue;
+
+        game::categories.push_back(trivia.category);
+    }
 }
 
 void game::save()
@@ -112,10 +122,12 @@ void game::main_menu()
     utils::clear_screen();
 
     // TODO: Add a logo, maybe?
-    stream::cout << "[1] Login" << stream::endl
-                 << "[2] Register" << stream::endl
-                 << "[Q] Quit" << stream::endl
-                 << "Press a key to continue..." << stream::endl;
+    stream::cout
+        << "Knowlegr Knockout" << stream::endl
+        << "[1] Login" << stream::endl
+        << "[2] Register" << stream::endl
+        << "[Q] Quit" << stream::endl
+        << "Press a key to continue..." << stream::endl;
 
     switch (_getch())
     {
@@ -156,11 +168,12 @@ void game::user_menu()
 
     stream::green << "Welcome, " << game::logged_user.value().username << "!" << stream::endl;
 
-    stream::cout << "[1] Play" << stream::endl
-                 << "[2] Leaderboards" << stream::endl
-                 << "[3] Profile" << stream::endl
-                 << "[Q] Logout" << stream::endl
-                 << "Press a key to continue..." << stream::endl;
+    stream::cout
+        << "[1] Play" << stream::endl
+        << "[2] Leaderboards" << stream::endl
+        << "[3] Profile" << stream::endl
+        << "[Q] Logout" << stream::endl
+        << "Press a key to continue..." << stream::endl;
 
     switch (_getch())
     {
@@ -191,20 +204,22 @@ void game::user_menu()
         game::user_menu();
     }
 }
-void game::admin_menu() 
+
+void game::admin_menu()
 {
     utils::clear_screen();
 
     stream::green << "Welcome, " << game::logged_user.value().username << "!" << stream::endl;
 
-    stream::cout << "[1] Add category" << stream::endl
-                 << "[2] Add trivia" << stream::endl
-                 << "[3] Edit trivia" << stream::endl
-                 << "[4] Delete trivia" << stream::endl
-                 << "[5] Show trivias" << stream::endl
-                 << "[6] Show users" << stream::endl
-                 << "[Q] Logout" << stream::endl
-                 << "Press a key to continue..." << stream::endl;
+    stream::cout
+        << "[1] Add category" << stream::endl
+        << "[2] Add trivia" << stream::endl
+        << "[3] Edit trivia" << stream::endl
+        << "[4] Delete trivia" << stream::endl
+        << "[5] Show trivias" << stream::endl
+        << "[6] Show users" << stream::endl
+        << "[Q] Logout" << stream::endl
+        << "Press a key to continue..." << stream::endl;
 
     switch (_getch())
     {
@@ -230,6 +245,7 @@ void game::admin_menu()
 
     case '5':
         game::show_trivias();
+        utils::press_any_key();
         game::admin_menu();
         break;
 
@@ -251,10 +267,210 @@ void game::admin_menu()
     }
 }
 
-
 void game::logout()
 {
     game::logged_user.reset();
     stream::green << "Logged out successfully!" << stream::endl;
+    utils::press_any_key();
+}
+
+void game::add_category()
+{
+    utils::clear_screen();
+
+    stream::cout << "Enter the category: ";
+    std::string category;
+    std::getline(stream::cin, category);
+
+    if (std::find(game::categories.begin(), game::categories.end(), category) != game::categories.end())
+    {
+        stream::red << "Category already exists!" << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    game::categories.push_back(category);
+
+    stream::green << "Category added successfully!" << stream::endl;
+    utils::press_any_key();
+}
+
+void game::show_users()
+{
+    utils::clear_screen();
+
+    stream::cout << std::left << std::setw(20) << "Username"
+                 << std::left << std::setw(20) << "Score" << stream::endl;
+
+    for (const auto &user : game::users)
+    {
+        stream::cout << std::left << std::setw(20) << user.username
+                     << std::left << std::setw(20) << user.score << stream::endl;
+    }
+
+    utils::press_any_key();
+}
+
+model::Trivia game::create_trivia()
+{
+    utils::clear_screen();
+
+    model::Trivia trivia;
+
+    stream::cout << "Enter the category: ";
+    std::getline(stream::cin, trivia.category);
+
+    if (std::find(game::categories.begin(), game::categories.end(), trivia.category) == game::categories.end())
+    {
+        stream::red << "Category does not exist!" << stream::endl;
+        utils::press_any_key();
+        return trivia;
+    }
+
+    stream::cout << "Enter the difficulty [easy, medium, hard]: ";
+    std::string difficulty;
+    std::getline(stream::cin, difficulty);
+
+    if (difficulty != "easy" && difficulty != "medium" && difficulty != "hard")
+    {
+        stream::red << "Invalid difficulty!" << stream::endl;
+        utils::press_any_key();
+        return trivia;
+    }
+
+    if (difficulty == "easy")
+        trivia.difficulty = model::Difficulty::easy;
+    else if (difficulty == "medium")
+        trivia.difficulty = model::Difficulty::medium;
+    else
+        trivia.difficulty = model::Difficulty::hard;
+
+    stream::cout << "Enter the question: ";
+    std::getline(stream::cin, trivia.question);
+
+    stream::cout << "Enter the answer: ";
+    std::getline(stream::cin, trivia.answer);
+
+    stream::cout << "Enter the options: " << stream::endl;
+    for (int i = 0; i < 4; i++)
+    {
+        stream::cout << "Option " << i + 1 << ": ";
+        std::getline(stream::cin, trivia.options[i]);
+    }
+
+    return trivia;
+}
+
+void game::show_trivias()
+{
+    utils::clear_screen();
+
+    stream::cout
+        << std::left << "ID"
+        << std::left << std::setw(20) << "Category"
+        << std::left << std::setw(20) << "Difficulty"
+        << std::left << std::setw(20) << "Question"
+        << std::left << std::setw(20) << "Answer" << stream::endl;
+
+    for (int i = 0; i < game::trivias.size(); i++)
+    {
+        stream::cout
+            << std::left << std::setw(20) << i
+            << std::left << std::setw(20) << game::trivias[i].category
+            << std::left << std::setw(20) << (game::trivias[i].difficulty == model::Difficulty::easy ? "easy" : game::trivias[i].difficulty == model::Difficulty::medium ? "medium"
+                                                                                                                                                                         : "hard")
+            << std::left << std::setw(20) << game::trivias[i].question
+            << std::left << std::setw(20) << game::trivias[i].answer << stream::endl;
+    }
+}
+
+void game::edit_trivia()
+{
+    // TODO: Make edit trivias more user-friendly (show the trivia before editing)
+    // TODO: Make it modular (edit category, edit difficulty, etc.)
+    utils::clear_screen();
+
+    game::show_trivias();
+
+    stream::cout << "Enter the ID of the trivia you want to edit: ";
+    int id;
+    std::cin >> id;
+
+    if (id < 0 || id >= game::trivias.size())
+    {
+        stream::red << "Invalid ID!" << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    model::Trivia &trivia = game::trivias[id];
+
+    stream::cout << "Enter the category [" << trivia.category << "]: ";
+    std::string category;
+    std::getline(stream::cin, category);
+
+    if (!category.empty())
+        trivia.category = category;
+
+    stream::cout << "Enter the difficulty [easy, medium, hard]: ";
+    std::string difficulty;
+    std::getline(stream::cin, difficulty);
+
+    if (difficulty == "easy")
+        trivia.difficulty = model::Difficulty::easy;
+    else if (difficulty == "medium")
+        trivia.difficulty = model::Difficulty::medium;
+    else if (difficulty == "hard")
+        trivia.difficulty = model::Difficulty::hard;
+
+    stream::cout << "Enter the question [" << trivia.question << "]: ";
+    std::string question;
+    std::getline(stream::cin, question);
+
+    if (!question.empty())
+        trivia.question = question;
+
+    stream::cout << "Enter the answer [" << trivia.answer << "]: ";
+    std::string answer;
+    std::getline(stream::cin, answer);
+
+    if (!answer.empty())
+        trivia.answer = answer;
+
+    stream::cout << "Enter the options: " << stream::endl;
+    for (int i = 0; i < 4; i++)
+    {
+        stream::cout << "Option " << i + 1 << " [" << trivia.options[i] << "]: ";
+        std::string option;
+        std::getline(stream::cin, option);
+
+        if (!option.empty())
+            trivia.options[i] = option;
+    }
+
+    stream::green << "Trivia edited successfully!" << stream::endl;
+    utils::press_any_key();
+}
+
+void game::delete_trivia()
+{
+    utils::clear_screen();
+
+    game::show_trivias();
+
+    stream::cout << "Enter the ID of the trivia you want to delete: ";
+    int id;
+    std::cin >> id;
+
+    if (id < 0 || id >= game::trivias.size())
+    {
+        stream::red << "Invalid ID!" << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    game::trivias.erase(game::trivias.begin() + id);
+
+    stream::green << "Trivia deleted successfully!" << stream::endl;
     utils::press_any_key();
 }
