@@ -80,6 +80,12 @@ void game::register_user()
     stream::cout << "Enter your username: ";
     std::getline(stream::cin, user.username);
 
+    if (user.username.empty())
+    {
+        stream::red << "Username cannot be empty!" << stream::endl;
+        return;
+    }
+
     if (game::search_user(user.username).has_value())
     {
         stream::red << "Username already exists!" << stream::endl;
@@ -88,6 +94,12 @@ void game::register_user()
 
     stream::cout << "Enter your password: ";
     utils::get_password(user.password);
+
+    if (user.password.empty())
+    {
+        stream::red << "Password cannot be empty!" << stream::endl;
+        return;
+    }
 
     stream::cout << "Confirm your password: ";
     std::string confirm_password;
@@ -161,6 +173,7 @@ void game::main_menu()
         game::main_menu();
     }
 }
+
 
 void game::user_menu()
 {
