@@ -1,7 +1,9 @@
-#include <iostream>
+#include "../include/game.h"
 
 int main()
 {
-    std::cout << "Hello, World!" << std::endl;
+    game::load();
+    game::main_menu();
+    game::save();
     return 0;
 }
