@@ -17,7 +17,7 @@ namespace utils
      * @brief Function that plays a sound
      * @param path: path to the sound file
      */
-    void play_sound(const std::string &path);
+    void play_sound(const std::string &path, bool async = true);
 
     /*
      * @brief Function that prints a message with a delay
@@ -42,6 +42,8 @@ namespace utils
      * @brief Function that clears the screen
      */
     void clear_screen();
+
+    void get_password(std::string &password);
 };
 
 #include "../src/utils.cpp"

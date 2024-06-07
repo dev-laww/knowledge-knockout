@@ -45,9 +45,14 @@ char utils::wait_for_answer(int duration)
     return answer;
 }
 
-void utils::play_sound(const std::string &path)
+void utils::play_sound(const std::string &path, bool async)
 {
-    PlaySoundA(path.c_str(), NULL, SND_FILENAME | SND_ASYNC);
+    auto flags = SND_FILENAME | SND_NODEFAULT;
+
+    if (async)
+        flags |= SND_ASYNC;
+
+    PlaySoundA(path.c_str(), NULL, flags);
 }
 
 void utils::press_any_key()
@@ -63,4 +68,29 @@ void utils::clear_screen()
 #else
     system("clear");
 #endif
+}
+
+void utils::get_password(std::string &password)
+{
+    password.clear();
+
+    char ch = '\0';
+    while ((ch = _getch()) != '\r')
+    {
+        if (ch == '\b')
+        {
+            if (!password.empty())
+            {
+                password.pop_back();
+                std::cout << "\b \b";
+            }
+        }
+        else
+        {
+            password.push_back(ch);
+            std::cout << '*';
+        }
+    }
+
+    std::cout << std::endl;
 }
