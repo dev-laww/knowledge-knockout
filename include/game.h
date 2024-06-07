@@ -7,6 +7,9 @@
 
 namespace game
 {
+    const std::string ADMIN_USERNAME = "admin";
+    const std::string ADMIN_PASSWORD = "admin";
+
     std::optional<model::User> logged_user;
     std::vector<model::User> users;
     std::vector<model::Trivia> trivias;
@@ -14,8 +17,8 @@ namespace game
     std::vector<std::string> categories;
 
     std::optional<model::User> login();
-    model::User register_user();
-    model::User search_user(const std::string &username);
+    void register_user();
+    std::optional<model::User> search_user(const std::string &username);
 
     void main_menu();
     void profile();
@@ -38,5 +41,7 @@ namespace game
     void answer_trivia(model::Difficulty difficulty, const std::string &category);
     void play();
 };
+
+#include "../src/game.cpp"
 
 #endif // DATA_H
