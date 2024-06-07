@@ -84,6 +84,9 @@ std::vector<model::Trivia> database::trivias()
         std::getline(iss, question, ',');
         std::getline(iss, answer, ',');
         trivias.push_back({category, model::Difficulty(std::stoi(difficultyStr)), question, answer});
+
+        for (int i = 0; i < 4; i++)
+            std::getline(iss, trivias.back().options[i], (i == 3 ? '\n' : ','));
     }
     return trivias;
 }
@@ -92,9 +95,14 @@ void database::save_trivias(const std::vector<model::Trivia> &trivias)
 {
     std::ofstream ofs(TRIVIA_FILE);
     ofs << "category,difficulty,question,answer\n";
+
     for (const auto &trivia : trivias)
     {
-        ofs << trivia.category << "," << static_cast<int>(trivia.difficulty) << "," << trivia.question << "," << trivia.answer << "\n";
+        ofs << trivia.category << "," << static_cast<int>(trivia.difficulty) << "," << trivia.question << "," << trivia.answer << ",";
+
+        for (int i = 0; i < 4; i++)
+            ofs << trivia.options[i] << (i == 3 ? "\n" : ",");
     }
+
     ofs.close();
 }
