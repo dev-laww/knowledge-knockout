@@ -2,12 +2,15 @@
 
 void game::load()
 {
+    // Load the data from the files
     game::users = database::users();
     game::trivias = database::trivias();
     game::leaderboards = database::leaderboards();
 
+    // Get the categories from the trivias
     game::categories.clear();
 
+    // Loop through the trivias and get the categories
     for (const auto &trivia : game::trivias)
     {
         if (std::find(game::categories.begin(), game::categories.end(), trivia.category) != game::categories.end())
@@ -19,6 +22,7 @@ void game::load()
 
 void game::save()
 {
+    // Save the data to the files
     database::save_users(game::users);
     database::save_trivias(game::trivias);
     database::save_leaderboards(game::leaderboards);
@@ -37,6 +41,7 @@ std::optional<model::User> game::login()
 
     if (!user.has_value())
     {
+        // If the username is admin, ask for the password
         if (username == game::ADMIN_USERNAME)
         {
             stream::cout << "Enter your password: ";
@@ -403,8 +408,6 @@ void game::show_trivias()
 
 void game::edit_trivia()
 {
-    // TODO: Make edit trivias more user-friendly (show the trivia before editing)
-    // TODO: Make it modular (edit category, edit difficulty, etc.)
     utils::clear_screen();
 
     game::show_trivias();
@@ -420,49 +423,87 @@ void game::edit_trivia()
         return;
     }
 
+    stream::cout << "Editing trivia with ID " << id << stream::endl;
+
     model::Trivia &trivia = game::trivias[id];
 
-    stream::cout << "Enter the category [" << trivia.category << "]: ";
-    std::string category;
-    std::getline(stream::cin, category);
+    // cout trivia details
+    stream::cout
+        << "Category: " << trivia.category << stream::endl
+        << "Difficulty: "
+        << (trivia.difficulty == model::Difficulty::easy ? "easy" : trivia.difficulty == model::Difficulty::medium ? "medium"
+                                                                                                                   : "hard")
+        << stream::endl
+        << "Question: " << trivia.question << stream::endl
+        << "Answer: " << trivia.answer << stream::endl
+        << "Options: " << stream::endl;
 
-    if (!category.empty())
-        trivia.category = category;
-
-    stream::cout << "Enter the difficulty [easy, medium, hard]: ";
-    std::string difficulty;
-    std::getline(stream::cin, difficulty);
-
-    if (difficulty == "easy")
-        trivia.difficulty = model::Difficulty::easy;
-    else if (difficulty == "medium")
-        trivia.difficulty = model::Difficulty::medium;
-    else if (difficulty == "hard")
-        trivia.difficulty = model::Difficulty::hard;
-
-    stream::cout << "Enter the question [" << trivia.question << "]: ";
-    std::string question;
-    std::getline(stream::cin, question);
-
-    if (!question.empty())
-        trivia.question = question;
-
-    stream::cout << "Enter the answer [" << trivia.answer << "]: ";
-    std::string answer;
-    std::getline(stream::cin, answer);
-
-    if (!answer.empty())
-        trivia.answer = answer;
-
-    stream::cout << "Enter the options: " << stream::endl;
     for (int i = 0; i < 4; i++)
-    {
-        stream::cout << "Option " << i + 1 << " [" << trivia.options[i] << "]: ";
-        std::string option;
-        std::getline(stream::cin, option);
+        stream::cout << "Option " << i + 1 << ": " << trivia.options[i] << stream::endl;
 
-        if (!option.empty())
-            trivia.options[i] = option;
+    stream::cout
+        << "[1] Edit category" << stream::endl
+        << "[2] Edit difficulty" << stream::endl
+        << "[3] Edit question" << stream::endl
+        << "[4] Edit answer" << stream::endl
+        << "[5] Edit options" << stream::endl
+        << "Press a key to continue..." << stream::endl;
+
+    std::string category, difficulty, question, answer;
+    
+    switch (_getch())
+    {
+    case '1':
+        stream::cout << "Enter the category [" << trivia.category << "]: ";
+        std::getline(stream::cin, category);
+
+        if (!category.empty())
+            trivia.category = category;
+        break;
+    case '2':
+        stream::cout << "Enter the difficulty [easy, medium, hard]: ";
+
+        std::getline(stream::cin, difficulty);
+
+        if (difficulty == "easy")
+            trivia.difficulty = model::Difficulty::easy;
+        else if (difficulty == "medium")
+            trivia.difficulty = model::Difficulty::medium;
+        else if (difficulty == "hard")
+            trivia.difficulty = model::Difficulty::hard;
+        break;
+    case '3':
+        stream::cout << "Enter the question [" << trivia.question << "]: ";
+
+        std::getline(stream::cin, question);
+
+        if (!question.empty())
+            trivia.question = question;
+        break;
+    case '4':
+        stream::cout << "Enter the answer [" << trivia.answer << "]: ";
+        std::getline(stream::cin, answer);
+
+        if (!answer.empty())
+            trivia.answer = answer;
+
+        break;
+    case '5':
+        stream::cout << "Enter the options: " << stream::endl;
+        for (int i = 0; i < 4; i++)
+        {
+            stream::cout << "Option " << i + 1 << " [" << trivia.options[i] << "]: ";
+            std::string option;
+            std::getline(stream::cin, option);
+
+            if (!option.empty())
+                trivia.options[i] = option;
+        }
+        break;
+    default:
+        stream::red << "Invalid option!" << stream::endl;
+        utils::press_any_key();
+        return;
     }
 
     stream::green << "Trivia edited successfully!" << stream::endl;
