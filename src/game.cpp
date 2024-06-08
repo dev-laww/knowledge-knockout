@@ -545,6 +545,15 @@ void game::change_password()
 
     game::logged_user.value().password = new_password;
 
+    for (auto &user : game::users)
+    {
+        if (user.username == game::logged_user.value().username)
+        {
+            user.password = new_password;
+            break;
+        }
+    }
+
     stream::green << "Password changed successfully!" << stream::endl;
     utils::press_any_key();
 }
