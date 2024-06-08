@@ -4,6 +4,7 @@
 #include "data.h"
 #include "stream.h"
 #include "utils.h"
+#include <random>
 
 namespace game
 {
@@ -22,7 +23,6 @@ namespace game
 
     void main_menu();
     void profile();
-    void edit_profile();
     void change_password();
     void load();
     void save();

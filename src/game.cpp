@@ -174,7 +174,6 @@ void game::main_menu()
     }
 }
 
-
 void game::user_menu()
 {
     utils::clear_screen();
@@ -185,6 +184,7 @@ void game::user_menu()
         << "[1] Play" << stream::endl
         << "[2] Leaderboards" << stream::endl
         << "[3] Profile" << stream::endl
+        << "[4] Change Password" << stream::endl
         << "[Q] Logout" << stream::endl
         << "Press a key to continue..." << stream::endl;
 
@@ -202,6 +202,10 @@ void game::user_menu()
 
     case '3':
         game::profile();
+        game::user_menu();
+        break;
+    case '4':
+        game::change_password();
         game::user_menu();
         break;
 
@@ -486,4 +490,221 @@ void game::delete_trivia()
 
     stream::green << "Trivia deleted successfully!" << stream::endl;
     utils::press_any_key();
+}
+
+void game::profile()
+{
+    utils::clear_screen();
+
+    stream::green << "Profile" << stream::endl;
+
+    stream::cout << "Username: " << game::logged_user.value().username << stream::endl;
+    stream::cout << "Score: " << game::logged_user.value().score << stream::endl;
+
+    utils::press_any_key();
+}
+
+void game::change_password()
+{
+    utils::clear_screen();
+
+    stream::green << "Change Password" << stream::endl;
+
+    stream::cout << "Enter your current password: ";
+    std::string current_password;
+    utils::get_password(current_password);
+
+    if (current_password != game::logged_user.value().password)
+    {
+        stream::red << "Invalid password!" << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    stream::cout << "Enter your new password: ";
+    std::string new_password;
+    utils::get_password(new_password);
+
+    if (new_password.empty())
+    {
+        stream::red << "Password cannot be empty!" << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    stream::cout << "Confirm your new password: ";
+    std::string confirm_password;
+    utils::get_password(confirm_password);
+
+    if (new_password != confirm_password)
+    {
+        stream::red << "Passwords do not match!" << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    game::logged_user.value().password = new_password;
+
+    stream::green << "Password changed successfully!" << stream::endl;
+    utils::press_any_key();
+}
+
+void game::show_leaderboards()
+{
+    utils::clear_screen();
+
+    std::sort(
+        game::leaderboards.begin(), game::leaderboards.end(),
+        [](const model::Leaderboard &a, const model::Leaderboard &b)
+        { return a.score > b.score; });
+
+    stream::cout << std::left << std::setw(20) << "Username"
+                 << std::left << std::setw(20) << "Score" << stream::endl;
+
+    for (const auto &leaderboard : game::leaderboards)
+    {
+        stream::cout << std::left << std::setw(20) << leaderboard.username
+                     << std::left << std::setw(20) << leaderboard.score << stream::endl;
+    }
+
+    utils::press_any_key();
+}
+
+void game::answer_trivia(model::Difficulty difficulty, const std::string &category)
+{
+    utils::clear_screen();
+
+    std::vector<model::Trivia> filtered_trivias;
+
+    for (const auto &trivia : game::trivias)
+        if (trivia.difficulty == difficulty && trivia.category == category)
+            filtered_trivias.push_back(trivia);
+
+    if (filtered_trivias.empty())
+    {
+        stream::red << "No trivias found!" << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    std::shuffle(filtered_trivias.begin(), filtered_trivias.end(), std::mt19937(std::random_device()()));
+
+    int score = 0;
+
+    for (const auto &trivia : filtered_trivias)
+    {
+        utils::clear_screen();
+
+        stream::cout << trivia.question << stream::endl;
+
+        std::vector<std::string> options = trivia.options;
+        options.push_back(trivia.answer);
+
+        std::shuffle(options.begin(), options.end(), std::mt19937(std::random_device()()));
+
+        for (int i = 0; i < options.size(); i++)
+            stream::cout << "[" << i + 1 << "] " << options[i] << stream::endl;
+
+        stream::cout << "Enter your answer: ";
+        int answer = static_cast<int>(utils::wait_for_answer());
+
+        if (options[answer - 1] == trivia.answer)
+        {
+            stream::green << "Correct!" << stream::endl;
+            utils::play_sound("assets/sound/sfx_point.wav");
+            switch (trivia.difficulty)
+            {
+            case model::Difficulty::easy:
+                score += 10;
+                break;
+            case model::Difficulty::medium:
+                score += 20;
+                break;
+            case model::Difficulty::hard:
+                score += 30;
+                break;
+            }
+        }
+    }
+
+    game::logged_user.value().score += score;
+
+    for (auto &leaderboard : game::leaderboards)
+    {
+        if (leaderboard.username == game::logged_user.value().username)
+        {
+            leaderboard.score = game::logged_user.value().score;
+            utils::press_any_key();
+            return;
+        }
+    }
+
+    game::leaderboards.push_back({game::logged_user.value().username, score});
+
+    utils::press_any_key();
+}
+
+void game::play()
+{
+    utils::clear_screen();
+
+    if (game::trivias.empty())
+    {
+        stream::red << "No trivias found! Ask admin to add one." << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    if (game::categories.empty())
+    {
+        stream::red << "No categories found! Ask admin to add one." << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    stream::cout << "Choose a category: " << stream::endl;
+
+    for (int i = 0; i < game::categories.size(); i++)
+        stream::cout << "[" << i + 1 << "] " << game::categories[i] << stream::endl;
+
+    stream::cout << "Enter your choice: ";
+    int choice;
+    std::cin >> choice;
+
+    if (choice < 1 || choice > game::categories.size())
+    {
+        stream::red << "Invalid choice!" << stream::endl;
+        utils::press_any_key();
+        return;
+    }
+
+    stream::cout << "Choose a difficulty: " << stream::endl;
+    stream::cout << "[1] Easy" << stream::endl;
+    stream::cout << "[2] Medium" << stream::endl;
+    stream::cout << "[3] Hard" << stream::endl;
+    stream::cout << "Enter your choice: ";
+    int difficulty;
+    std::cin >> difficulty;
+
+    model::Difficulty diff;
+
+    switch (difficulty)
+    {
+    case 1:
+        diff = model::Difficulty::easy;
+        break;
+    case 2:
+        diff = model::Difficulty::medium;
+        break;
+    case 3:
+        diff = model::Difficulty::hard;
+        break;
+    default:
+        stream::red << "Invalid choice!" << stream::endl;
+        utils::press_any_key();
+        game::play();
+        return;
+    }
+
+    game::answer_trivia(diff, game::categories[choice - 1]);
 }
