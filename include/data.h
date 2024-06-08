@@ -37,7 +37,7 @@ namespace model
         Difficulty difficulty;
         std::string question;
         std::string answer;
-        std::string options[4];
+        std::vector<std::string> options;
     };
 }
 
