@@ -14,7 +14,10 @@ void utils::timer(std::atomic<bool> &running, int duration)
     }
 
     if (!running.load())
+    {
+        std::cout << std::setw(10) << std::setfill(' ') << '\r';
         return;
+    }
 
     utils::play_sound("assets/sound/sfx_die.wav");
     stream::red << "Time's up!" << std::endl;
