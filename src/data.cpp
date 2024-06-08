@@ -100,7 +100,7 @@ std::vector<model::Trivia> database::trivias()
 void database::save_trivias(const std::vector<model::Trivia> &trivias)
 {
     std::ofstream ofs(TRIVIA_FILE);
-    ofs << "category,difficulty,question,answer\n";
+    ofs << "category,difficulty,question,answer,option 1,option 2,option 3,option 4\n";
 
     for (const auto &trivia : trivias)
     {
