@@ -52,6 +52,12 @@ std::vector<model::Leaderboard> database::leaderboards()
         std::getline(iss, scoreStr, ',');
         leaderboards.push_back({username, std::stoi(scoreStr)});
     }
+
+    std::sort(
+        leaderboards.begin(), leaderboards.end(),
+        [](const model::Leaderboard &a, const model::Leaderboard &b)
+        { return a.score > b.score; });
+
     return leaderboards;
 }
 
