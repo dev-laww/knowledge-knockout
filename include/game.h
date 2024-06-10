@@ -145,6 +145,11 @@ namespace game
     * @details This function asks the user for the difficulty and category of the trivia game
     */
     void play();
+
+    /*
+    * @brief Function to update the game state
+    */
+    void update();
 };
 
 #include "../src/game.cpp"

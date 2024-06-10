@@ -43,6 +43,10 @@ namespace utils
      */
     void clear_screen();
 
+    /*
+    * @brief Function that gets a password from the user
+    * @param password: string to store the password
+    */
     void get_password(std::string &password);
 };
 

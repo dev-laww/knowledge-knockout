@@ -140,7 +140,7 @@ void game::main_menu()
 
     // TODO: Add a logo, maybe?
     stream::cout
-        << "Knowlegr Knockout" << stream::endl
+        << "Knowledge Knockout" << stream::endl
         << "[1] Login" << stream::endl
         << "[2] Register" << stream::endl
         << "[Q] Quit" << stream::endl
@@ -153,7 +153,10 @@ void game::main_menu()
         game::logged_user = game::login();
 
         if (!game::logged_user.has_value())
+        {
             game::main_menu();
+            break;
+        }
 
         if (game::logged_user.value().username == game::ADMIN_USERNAME)
             game::admin_menu();
@@ -450,7 +453,7 @@ void game::edit_trivia()
         << "Press a key to continue..." << stream::endl;
 
     std::string category, difficulty, question, answer;
-    
+
     switch (_getch())
     {
     case '1':
@@ -603,10 +606,7 @@ void game::show_leaderboards()
 {
     utils::clear_screen();
 
-    std::sort(
-        game::leaderboards.begin(), game::leaderboards.end(),
-        [](const model::Leaderboard &a, const model::Leaderboard &b)
-        { return a.score > b.score; });
+    game::update();
 
     stream::cout << std::left << std::setw(20) << "Username"
                  << std::left << std::setw(20) << "Score" << stream::endl;
@@ -655,9 +655,10 @@ void game::answer_trivia(model::Difficulty difficulty, const std::string &catego
         for (int i = 0; i < options.size(); i++)
             stream::cout << "[" << i + 1 << "] " << options[i] << stream::endl;
 
-        stream::cout << "Enter your answer: ";
-        int answer = static_cast<int>(utils::wait_for_answer());
+        stream::cout << "Enter your answer: " << stream::endl;
+        int answer = static_cast<int>(utils::wait_for_answer() - '0');
 
+        stream::cout << "Your answer: " << answer << stream::endl;
         if (options[answer - 1] == trivia.answer)
         {
             stream::green << "Correct!" << stream::endl;
@@ -678,6 +679,7 @@ void game::answer_trivia(model::Difficulty difficulty, const std::string &catego
     }
 
     game::logged_user.value().score += score;
+    game::update();
 
     for (auto &leaderboard : game::leaderboards)
     {
@@ -685,11 +687,13 @@ void game::answer_trivia(model::Difficulty difficulty, const std::string &catego
         {
             leaderboard.score = game::logged_user.value().score;
             utils::press_any_key();
+            game::update();
             return;
         }
     }
 
     game::leaderboards.push_back({game::logged_user.value().username, score});
+    game::update();
 
     utils::press_any_key();
 }
@@ -717,9 +721,8 @@ void game::play()
     for (int i = 0; i < game::categories.size(); i++)
         stream::cout << "[" << i + 1 << "] " << game::categories[i] << stream::endl;
 
-    stream::cout << "Enter your choice: ";
-    int choice;
-    std::cin >> choice;
+    stream::cout << "Press a key to continue...";
+    int choice = _getch() - '0';
 
     if (choice < 1 || choice > game::categories.size())
     {
@@ -732,9 +735,8 @@ void game::play()
     stream::cout << "[1] Easy" << stream::endl;
     stream::cout << "[2] Medium" << stream::endl;
     stream::cout << "[3] Hard" << stream::endl;
-    stream::cout << "Enter your choice: ";
-    int difficulty;
-    std::cin >> difficulty;
+    stream::cout << "Press a key to continue...";
+    int difficulty = _getch() - '0';
 
     model::Difficulty diff;
 
@@ -757,4 +759,27 @@ void game::play()
     }
 
     game::answer_trivia(diff, game::categories[choice - 1]);
+}
+
+void game::update()
+{
+    // sort the leaderboards
+    std::sort(
+        game::leaderboards.begin(), game::leaderboards.end(),
+        [](const model::Leaderboard &a, const model::Leaderboard &b)
+        { return a.score > b.score; });
+
+    // check if the logged user has a value, if not return
+    if (!game::logged_user.has_value())
+        return;
+
+    // update the user in the users vector
+    for (auto &user : game::users)
+    {
+        if (user.username != game::logged_user.value().username)
+            continue;
+
+        user = game::logged_user.value();
+        break;
+    }
 }
