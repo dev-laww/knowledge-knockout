@@ -55,6 +55,7 @@ std::optional<model::User> game::login()
 
             stream::red << "Invalid password!" << stream::endl;
             utils::press_any_key();
+            return std::nullopt;
         }
 
         stream::red << "User not found!" << stream::endl;
@@ -270,7 +271,6 @@ void game::admin_menu()
 
     case '5':
         game::show_trivias();
-        utils::press_any_key();
         game::admin_menu();
         break;
 
@@ -386,42 +386,83 @@ model::Trivia game::create_trivia()
     return trivia;
 }
 
-void game::show_trivias()
+void game::show_trivias(int current_page, int entries_per_page)
 {
     utils::clear_screen();
+
+    int total_pages = (game::trivias.size() + entries_per_page - 1) / entries_per_page;
+    int start = (current_page - 1) * entries_per_page;
+    int end = (start + entries_per_page < game::trivias.size()) ? start + entries_per_page : game::trivias.size();
 
     stream::cout
         << std::left << std::setw(5) << "ID"
         << std::left << std::setw(20) << "Category"
         << std::left << std::setw(20) << "Difficulty"
         << std::left << std::setw(50) << "Question"
-        << std::left << std::setw(20) << "Answer" << stream::endl;
+        << std::left << std::setw(50) << "Answer" << stream::endl;
 
-    for (int i = 0; i < game::trivias.size(); i++)
+    for (int i = start; i < end; i++)
     {
         std::vector<std::string> wrapped_question = utils::wrap_text(game::trivias[i].question, 50);
-        stream::cout
-            << std::left << std::setw(5) << i
-            << std::left << std::setw(20) << game::trivias[i].category
-            << std::left << std::setw(20)
-            << (game::trivias[i].difficulty == model::Difficulty::easy ? "easy" : game::trivias[i].difficulty == model::Difficulty::medium ? "medium"
-                                                                                                                                           : "hard");
+        std::vector<std::string> wrapped_answer = utils::wrap_text(game::trivias[i].answer, 50);
 
-        for (size_t j = 0; j < wrapped_question.size(); j++)
+        size_t num_question_lines = wrapped_question.size();
+        size_t num_answer_lines = wrapped_answer.size();
+        size_t num_lines = (num_question_lines > num_answer_lines) ? num_question_lines : num_answer_lines;
+
+        for (size_t j = 0; j < num_lines; j++)
         {
-            if (j > 0)
-            {
-                stream::cout << std::left << std::setw(5) << " "
-                             << std::left << std::setw(20) << " "
-                             << std::left << std::setw(20) << " ";
-            }
-            stream::cout << std::left << std::setw(50) << wrapped_question[j];
             if (j == 0)
             {
-                stream::cout << std::left << std::setw(20) << game::trivias[i].answer;
+                stream::cout
+                    << std::left << std::setw(5) << i
+                    << std::left << std::setw(20) << game::trivias[i].category
+                    << std::left << std::setw(20)
+                    << (game::trivias[i].difficulty == model::Difficulty::easy ? "easy" : game::trivias[i].difficulty == model::Difficulty::medium ? "medium"
+                                                                                                                                                   : "hard");
             }
-            stream::cout << stream::endl;
+            else
+            {
+                stream::cout
+                    << std::left << std::setw(5) << " "
+                    << std::left << std::setw(20) << " "
+                    << std::left << std::setw(20) << " ";
+            }
+
+            stream::cout
+                << std::left << std::setw(50)
+                << (j < num_question_lines ? wrapped_question[j] : "")
+                << std::left << std::setw(50)
+                << (j < num_answer_lines ? wrapped_answer[j] : "")
+                << stream::endl;
         }
+    }
+
+    stream::cout << "Page " << current_page << " of " << total_pages << ". Enter 'n' for next page, 'p' for previous page, or 'q' to quit: ";
+
+    switch (_getch())
+    {
+    case 'N':
+    case 'n':
+        if (current_page < total_pages)
+            game::show_trivias(current_page + 1, entries_per_page);
+        else
+            game::show_trivias(current_page, entries_per_page);
+
+        break;
+    case 'P':
+    case 'p':
+        if (current_page > 1)
+            game::show_trivias(current_page - 1, entries_per_page);
+        else
+            game::show_trivias(current_page, entries_per_page);
+
+        break;
+    case 'q':
+    case 'Q':
+        break;
+    default:
+        game::show_trivias(current_page, entries_per_page);
     }
 }
 
@@ -449,20 +490,28 @@ void game::edit_trivia()
     model::Trivia &trivia = game::trivias[id];
 
     // cout trivia details
+    utils::clear_screen();
+    stream::consceal << "Category: ";
+    stream::cout << trivia.category << stream::endl;
+    stream::consceal << "Difficulty: ";
+    stream::cout << (trivia.difficulty == model::Difficulty::easy ? "easy" : trivia.difficulty == model::Difficulty::medium ? "medium"
+                                                                                                                            : "hard")
+                 << stream::endl;
+    stream::consceal << "Question: ";
+    stream::cout << trivia.question << stream::endl;
+    stream::consceal << "Answer: ";
+    stream::cout << trivia.answer << stream::endl;
+    stream::consceal << "Options: " << stream::endl;
+
+    for (int i = 0; i < trivia.options.size(); i++)
+    {
+        stream::consceal << "Option " << (i + 1) << ": ";
+        stream::cout << trivia.options[i] << stream::endl;
+    }
+
     stream::cout
-        << "Category: " << trivia.category << stream::endl
-        << "Difficulty: "
-        << (trivia.difficulty == model::Difficulty::easy ? "easy" : trivia.difficulty == model::Difficulty::medium ? "medium"
-                                                                                                                   : "hard")
         << stream::endl
-        << "Question: " << trivia.question << stream::endl
-        << "Answer: " << trivia.answer << stream::endl
-        << "Options: " << stream::endl;
-
-    for (int i = 0; i < 4; i++)
-        stream::cout << "Option " << i + 1 << ": " << trivia.options[i] << stream::endl;
-
-    stream::cout
+        << "What do you want to edit?" << stream::endl
         << "[1] Edit category" << stream::endl
         << "[2] Edit difficulty" << stream::endl
         << "[3] Edit question" << stream::endl
@@ -511,7 +560,7 @@ void game::edit_trivia()
         break;
     case '5':
         stream::cout << "Enter the options: " << stream::endl;
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < trivia.options.size(); i++)
         {
             stream::cout << "Option " << i + 1 << " [" << trivia.options[i] << "]: ";
             std::string option;
@@ -751,12 +800,14 @@ void game::play()
         return;
     }
 
-    stream::cout << "Choose a difficulty: " << stream::endl;
-    stream::cout << "[1] Easy" << stream::endl;
-    stream::cout << "[2] Medium" << stream::endl;
-    stream::cout << "[3] Hard" << stream::endl;
-    stream::cout << "Press a key to continue...";
+    stream::cout << "Choose a difficulty: " << stream::endl
+                 << "[1] Easy" << stream::endl
+                 << "[2] Medium" << stream::endl
+                 << "[3] Hard" << stream::endl
+                 << "Press a key to continue...";
     int difficulty = _getch() - '0';
+
+    std::cin.ignore();
 
     model::Difficulty diff;
 

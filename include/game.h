@@ -5,6 +5,7 @@
 #include "stream.h"
 #include "utils.h"
 #include <random>
+#include <algorithm>
 
 namespace game
 {
@@ -111,7 +112,7 @@ namespace game
     * @brief Function to show the trivias
     * @details This function shows the trivias
     */
-    void show_trivias();
+    void show_trivias(int current_page = 1, int entries_per_page = 10);
 
     /*
     * @brief Function to show the users
