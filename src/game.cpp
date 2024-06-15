@@ -391,21 +391,37 @@ void game::show_trivias()
     utils::clear_screen();
 
     stream::cout
-        << std::left << "ID"
+        << std::left << std::setw(5) << "ID"
         << std::left << std::setw(20) << "Category"
         << std::left << std::setw(20) << "Difficulty"
-        << std::left << std::setw(20) << "Question"
+        << std::left << std::setw(50) << "Question"
         << std::left << std::setw(20) << "Answer" << stream::endl;
 
     for (int i = 0; i < game::trivias.size(); i++)
     {
+        std::vector<std::string> wrapped_question = utils::wrap_text(game::trivias[i].question, 50);
         stream::cout
-            << std::left << std::setw(20) << i
+            << std::left << std::setw(5) << i
             << std::left << std::setw(20) << game::trivias[i].category
-            << std::left << std::setw(20) << (game::trivias[i].difficulty == model::Difficulty::easy ? "easy" : game::trivias[i].difficulty == model::Difficulty::medium ? "medium"
-                                                                                                                                                                         : "hard")
-            << std::left << std::setw(20) << game::trivias[i].question
-            << std::left << std::setw(20) << game::trivias[i].answer << stream::endl;
+            << std::left << std::setw(20)
+            << (game::trivias[i].difficulty == model::Difficulty::easy ? "easy" : game::trivias[i].difficulty == model::Difficulty::medium ? "medium"
+                                                                                                                                           : "hard");
+
+        for (size_t j = 0; j < wrapped_question.size(); j++)
+        {
+            if (j > 0)
+            {
+                stream::cout << std::left << std::setw(5) << " "
+                             << std::left << std::setw(20) << " "
+                             << std::left << std::setw(20) << " ";
+            }
+            stream::cout << std::left << std::setw(50) << wrapped_question[j];
+            if (j == 0)
+            {
+                stream::cout << std::left << std::setw(20) << game::trivias[i].answer;
+            }
+            stream::cout << stream::endl;
+        }
     }
 }
 
@@ -418,6 +434,8 @@ void game::edit_trivia()
     stream::cout << "Enter the ID of the trivia you want to edit: ";
     int id;
     std::cin >> id;
+
+    std::cin.ignore();
 
     if (id < 0 || id >= game::trivias.size())
     {
@@ -522,6 +540,8 @@ void game::delete_trivia()
     stream::cout << "Enter the ID of the trivia you want to delete: ";
     int id;
     std::cin >> id;
+
+    std::cin.ignore();
 
     if (id < 0 || id >= game::trivias.size())
     {
