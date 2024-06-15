@@ -7,6 +7,8 @@
 #include <conio.h>
 #include <iomanip>
 #include <windows.h>
+#include <sstream>
+#include <vector>
 #include "stream.h"
 
 #pragma comment(lib, "winmm.lib")
@@ -44,10 +46,12 @@ namespace utils
     void clear_screen();
 
     /*
-    * @brief Function that gets a password from the user
-    * @param password: string to store the password
-    */
+     * @brief Function that gets a password from the user
+     * @param password: string to store the password
+     */
     void get_password(std::string &password);
+
+    std::vector<std::string> wrap_text(const std::string &text, size_t width = 30);
 };
 
 #include "../src/utils.cpp"

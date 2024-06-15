@@ -112,3 +112,26 @@ void utils::get_password(std::string &password)
 
     std::cout << std::endl;
 }
+
+std::vector<std::string> utils::wrap_text(const std::string& text, size_t width) {
+    std::istringstream words(text);
+    std::string word;
+    std::vector<std::string> lines;
+    std::ostringstream wrapped;
+    size_t current_width = 0;
+
+    while (words >> word) {
+        if (current_width + word.length() > width) {
+            lines.push_back(wrapped.str());
+            wrapped.str("");
+            wrapped.clear();
+            current_width = 0;
+        }
+        wrapped << word << " ";
+        current_width += word.length() + 1;
+    }
+    lines.push_back(wrapped.str());
+
+    return lines;
+}
+
