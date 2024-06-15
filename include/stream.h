@@ -38,15 +38,25 @@ namespace stream
 
         Stream &operator<<(const std::string &str)
         {
-            auto style = fmt::fg(foreground_color);
+            print(str);
+            return *this;
+        }
 
-            if (background_color.has_value())
-                style |= fmt::bg(background_color.value());
+        Stream &operator<<(const char *str)
+        {
+            print(std::string(str));
+            return *this;
+        }
 
-            if (text_style != TextStyle::none)
-                style |= fmt::emphasis(text_style);
+        Stream &operator<<(int value)
+        {
+            print(std::to_string(value));
+            return *this;
+        }
 
-            fmt::print(style, "{}", str);
+        Stream &operator<<(double value)
+        {
+            print(std::to_string(value));
             return *this;
         }
 
@@ -57,6 +67,19 @@ namespace stream
         }
 
     private:
+        void print(const std::string &str)
+        {
+            auto style = fmt::fg(foreground_color);
+
+            if (background_color.has_value())
+                style |= fmt::bg(background_color.value());
+
+            if (text_style != TextStyle::none)
+                style |= fmt::emphasis(text_style);
+
+            fmt::print(style, "{}", str);
+        }
+
         fmt::color foreground_color;
         std::optional<fmt::color> background_color;
         TextStyle text_style;
