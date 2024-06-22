@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C++ Launch (Windows)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/KnowledgeKnockout.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/Debug",
+            "environment": [],
+            "console": "externalTerminal", // Use an external terminal for input
+            "preLaunchTask": "CMake: build",
+            "logging": {
+                "moduleLoad": true,
+                "programOutput": true,
+                "engineLogging": true,
+                "trace": true
+            }
+        }
+    ]
+}
